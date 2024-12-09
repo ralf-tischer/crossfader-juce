@@ -1,3 +1,7 @@
+# Usage:
+# cmake -B cmake -B cmake-build -DCMAKE_PREFIX_PATH=d:/Tools/Coding/JUCE/install
+# cmake --build cmake-build
+
 cmake_minimum_required(VERSION 3.22)
 
 # Set the project name and version
