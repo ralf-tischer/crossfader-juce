@@ -6,6 +6,9 @@
 class CrossfaderjuceAudioProcessor : public juce::AudioProcessor
 {
 public:
+    juce::AudioParameterFloat* crossfaderParam; // Declare crossfaderParam
+
+
     //==============================================================================
     CrossfaderjuceAudioProcessor();
     ~CrossfaderjuceAudioProcessor() override;
@@ -46,7 +49,6 @@ public:
 
 private:
     float crossfadeAmount = 0.5f; // Initialize crossfadeAmount
-    juce::AudioParameterFloat* crossfaderParam; // Declare crossfaderParam
     juce::dsp::DryWetMixer<float> crossfader;
     juce::dsp::ProcessSpec mySpec;
 
