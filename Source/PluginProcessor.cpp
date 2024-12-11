@@ -1,7 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
 CrossfaderjuceAudioProcessor::CrossfaderjuceAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
@@ -11,6 +10,7 @@ CrossfaderjuceAudioProcessor::CrossfaderjuceAudioProcessor()
                        )
 #endif
 {
+    addParameter(crossfaderParam = new juce::AudioParameterFloat("crossfader", "Crossfader", 0.0f, 1.0f, 0.5f));
 }
 
 CrossfaderjuceAudioProcessor::~CrossfaderjuceAudioProcessor()
@@ -18,6 +18,7 @@ CrossfaderjuceAudioProcessor::~CrossfaderjuceAudioProcessor()
 }
 
 //==============================================================================
+
 const juce::String CrossfaderjuceAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -68,6 +69,13 @@ int CrossfaderjuceAudioProcessor::getCurrentProgram()
 
 void CrossfaderjuceAudioProcessor::setCurrentProgram (int index)
 {
+    // Example: Set crossfader value based on program index
+    if (index == 0)
+        crossfaderParam->setValueNotifyingHost(0.0f);
+    else if (index == 1)
+        crossfaderParam->setValueNotifyingHost(1.0f);
+    else
+        crossfaderParam->setValueNotifyingHost(0.5f);
 }
 
 const juce::String CrossfaderjuceAudioProcessor::getProgramName (int index)
@@ -80,50 +88,26 @@ void CrossfaderjuceAudioProcessor::changeProgramName (int index, const juce::Str
 }
 
 //==============================================================================
+
 void CrossfaderjuceAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Initialize the ProcessSpec structure
     mySpec.sampleRate = sampleRate;
     mySpec.maximumBlockSize = samplesPerBlock;
     mySpec.numChannels = getTotalNumOutputChannels();
-
-    crossfader.prepare(mySpec);
-    crossfader.setWetMixProportion(crossfadeAmount);
 }
 
 void CrossfaderjuceAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+    // Release resources
 }
 
-#ifndef JucePlugin_PreferredChannelConfigurations
 bool CrossfaderjuceAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
     return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
-        return false;
-
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
-
-    return true;
-  #endif
 }
-#endif
 
-void CrossfaderjuceAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void CrossfaderjuceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
@@ -147,18 +131,18 @@ void CrossfaderjuceAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
         if (input1L != nullptr && input1R != nullptr && input2L != nullptr && input2R != nullptr && outputL != nullptr && outputR != nullptr)
         {
             // Process the audio data here
+            float crossfadeAmount = getCrossfadeAmount();
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
             {
-                // Example processing: simple crossfade between input1 and input2
-                float crossfade = 0.5f; // Example crossfade value
-                outputL[sample] = input1L[sample] * (1.0f - crossfade) + input2L[sample] * crossfade;
-                outputR[sample] = input1R[sample] * (1.0f - crossfade) + input2R[sample] * crossfade;
+                outputL[sample] = input1L[sample] * (1.0f - crossfadeAmount) + input2L[sample] * crossfadeAmount;
+                outputR[sample] = input1R[sample] * (1.0f - crossfadeAmount) + input2R[sample] * crossfadeAmount;
             }
         }
     }
 }
 
 //==============================================================================
+
 bool CrossfaderjuceAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
@@ -170,27 +154,28 @@ void CrossfaderjuceAudioProcessor::setCrossfadeAmount(float amount)
     crossfader.setWetMixProportion(amount);
 }
 
+float CrossfaderjuceAudioProcessor::getCrossfadeAmount() const {
+    return crossfadeAmount;
+}
+
 juce::AudioProcessorEditor* CrossfaderjuceAudioProcessor::createEditor()
 {
     return new CrossfaderjuceAudioProcessorEditor (*this);
 }
 
 //==============================================================================
+
 void CrossfaderjuceAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
 }
 
 void CrossfaderjuceAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    // You should use this method to restore your parameters from this memory block.
 }
 
-//==============================================================================
-// This creates new instances of the plugin..
+// This creates new instances of the plugin
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new CrossfaderjuceAudioProcessor();
