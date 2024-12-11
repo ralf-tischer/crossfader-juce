@@ -1,10 +1,13 @@
-#include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "CustomLookAndFeel.h"
 
-//==============================================================================
 CrossfaderjuceAudioProcessorEditor::CrossfaderjuceAudioProcessorEditor (CrossfaderjuceAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    // Create and set the custom look and feel
+    customLookAndFeel = std::make_unique<CustomLookAndFeel>();
+    amountSlider.setLookAndFeel(customLookAndFeel.get());
+
     // Configure the slider
     amountSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     amountSlider.setRange(0.0, 1.0, 0.01);
@@ -24,34 +27,28 @@ CrossfaderjuceAudioProcessorEditor::CrossfaderjuceAudioProcessorEditor (Crossfad
 
 CrossfaderjuceAudioProcessorEditor::~CrossfaderjuceAudioProcessorEditor()
 {
+    // Reset the look and feel to avoid dangling pointers
+    amountSlider.setLookAndFeel(nullptr);
 }
 
-//==============================================================================
 void CrossfaderjuceAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    // Fill the background with a solid color
+    g.fillAll (juce::Colours::black);
 }
 
 void CrossfaderjuceAudioProcessorEditor::resized()
 {
-    // Set the bounds of the slider
-    amountSlider.setBounds(10, 10, getWidth() - 20, 20);
-    amountLabel.setBounds(10, 40, getWidth() - 20, 20);
+    // Set the bounds of the slider and label
+    amountSlider.setBounds (10, 10, getWidth() - 20, 20);
+    amountLabel.setBounds (10, 40, getWidth() - 20, 20);
 }
 
-void CrossfaderjuceAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
+void CrossfaderjuceAudioProcessorEditor::sliderValueChanged (juce::Slider* slider)
 {
     if (slider == &amountSlider)
     {
-        // Handle the slider value change
-        audioProcessor.setCrossfadeAmount(slider->getValue());
-
-        // Update the label text
-        amountLabel.setText("Crossfade Amount: " + juce::String(slider->getValue()), juce::dontSendNotification);
+        // Update the label text with the new slider value
+        amountLabel.setText ("Crossfade Amount: " + juce::String (amountSlider.getValue()), juce::dontSendNotification);
     }
 }

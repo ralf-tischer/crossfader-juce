@@ -21,30 +21,39 @@ else()
 endif()
 
 # Add the executable
-juce_add_plugin(Crossfader
+juce_add_plugin(${PROJECT_NAME}
     COMPANY_NAME "Ratsi"
     PLUGIN_MANUFACTURER_CODE Juce
     PLUGIN_CODE RSCF
+    VST3_CATEGORIES "Mix"
     FORMATS VST3
-    PRODUCT_NAME "Ratsi sein Crossfader")
+    PRODUCT_NAME "Ratsi sein ${PROJECT_NAME}")
 
 # Generate the JUCE header
-juce_generate_juce_header(Crossfader)
+juce_generate_juce_header(${PROJECT_NAME})
 
 # Add source files
-target_sources(Crossfader 
-    PRIVATE
-        Source/PluginProcessor.cpp
-        Source/PluginEditor.cpp)
+# Add these lines to include the new files
+target_sources(${PROJECT_NAME} PRIVATE
+    Source/PluginEditor.cpp
+    Source/PluginProcessor.cpp
+    Source/CustomLookAndFeel.cpp
+    Source/PluginEditor.h
+    Source/PluginProcessor.h
+    Source/CustomLookAndFeel.h
+)
+
+# Copy assets to the build directory
+file(COPY ${CMAKE_SOURCE_DIR}/Assets DESTINATION ${CMAKE_BINARY_DIR})
 
 # Add header files
-target_compile_definitions(Crossfader
+target_compile_definitions(${PROJECT_NAME}
     PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL)
 
 # Link the JUCE libraries
-target_link_libraries(Crossfader
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
@@ -54,4 +63,6 @@ target_link_libraries(Crossfader
         juce::juce_recommended_warning_flags)
 
 # Specify the include directories
-target_include_directories(Crossfader PRIVATE "D:/Tools/Coding/JUCE/modules")
+target_include_directories(${PROJECT_NAME} PRIVATE "D:/Tools/Coding/JUCE/modules")
+
+
